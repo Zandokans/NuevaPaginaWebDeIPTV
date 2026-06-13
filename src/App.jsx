@@ -392,10 +392,11 @@ function UserGroupIcon({ n }) {
 
 /* ── Content Carousel Component ── */
 function ContentCarousel() {
+  const base = import.meta.env.BASE_URL || '/'
   const slides = [
     {
       id: 1,
-      image: '/iptv_sports.png',
+      image: `${base}iptv_sports.png`,
       badge: 'Deportes en Vivo',
       title: 'La Emoción del Deporte sin Cortes',
       desc: 'Transmisiones en alta definición de la Champions League, Premier League, UFC, Fórmula 1 y más. ¡Siente la adrenalina como si estuvieras en el estadio!',
@@ -404,7 +405,7 @@ function ContentCarousel() {
     },
     {
       id: 2,
-      image: '/iptv_movies.png',
+      image: `${base}iptv_movies.png`,
       badge: 'Cine & Series',
       title: 'Tus Películas Favoritas y Estrenos Semanales',
       desc: 'El catálogo de streaming más completo. Desde los últimos estrenos de cine hasta tus series favoritas de siempre en resolución Ultra HD.',
@@ -413,7 +414,7 @@ function ContentCarousel() {
     },
     {
       id: 3,
-      image: '/iptv_live_channels.png',
+      image: `${base}iptv_live_channels.png`,
       badge: 'Televisión en Vivo',
       title: 'Más de 50,000 Canales Mundiales',
       desc: 'Accede a la televisión de todo el mundo. Canales locales, internacionales, infantiles y de noticias, ordenados por categorías en una guía interactiva.',
