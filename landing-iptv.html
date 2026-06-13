@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IPTV - Suscripciones</title>
+  <style>
+    :root{--accent:#1e88e5;--bg:#0f1720;--card:#111827;--muted:#9aa4b2}
+    body{font-family:Inter,system-ui,Segoe UI,Arial;background:linear-gradient(180deg,#071028 0%,#071025 100%);color:#e6eef6;margin:0}
+    .container{max-width:1100px;margin:0 auto;padding:36px}
+    header{display:flex;align-items:center;justify-content:space-between}
+    .logo{display:flex;gap:12px;align-items:center}
+    .logo .brand{font-weight:700;font-size:20px}
+    nav a{color:var(--muted);text-decoration:none;margin-left:18px}
+    .hero{display:grid;grid-template-columns:1fr 420px;gap:28px;align-items:center;margin-top:40px}
+    .hero h1{font-size:40px;margin:0 0 12px}
+    .hero p{color:var(--muted);margin:0 0 18px}
+    .cta{display:flex;gap:12px}
+    .btn{background:var(--accent);color:#fff;padding:12px 18px;border-radius:8px;border:none;cursor:pointer}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.08)}
+    .card{background:rgba(255,255,255,0.03);padding:20px;border-radius:12px}
+    .features{display:flex;gap:12px;margin-top:28px}
+    .feature{flex:1;background:rgba(255,255,255,0.02);padding:16px;border-radius:8px;text-align:center}
+    .pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:28px}
+    .price{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:18px;border-radius:10px;text-align:center}
+    .price h3{margin:0 0 8px}
+    .price .amount{font-size:22px;font-weight:700;color:var(--accent)}
+    form{display:grid;gap:12px}
+    input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit}
+    footer{margin-top:40px;color:var(--muted);font-size:14px;text-align:center}
+    @media(max-width:900px){.hero{grid-template-columns:1fr;}.pricing{grid-template-columns:1fr}} 
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <div style="width:44px;height:44px;background:linear-gradient(135deg,#3b82f6,#06b6d4);border-radius:8px"></div>
+        <div>
+          <div class="brand">MiIPTV</div>
+          <div style="font-size:12px;color:var(--muted)">Calidad y canales en vivo</div>
+        </div>
+      </div>
+      <nav>
+        <a href="#paquetes">Paquetes</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div>
+        <h1>IPTV confiable — Canales en vivo y VOD</h1>
+        <p>Transmite tus canales favoritos en alta calidad desde cualquier dispositivo. Prueba sin riesgos y cambia de paquete cuando quieras.</p>
+        <div class="cta">
+          <button class="btn" onclick="document.getElementById('paquetes').scrollIntoView({behavior:'smooth'})">Ver paquetes</button>
+          <button class="btn secondary" onclick="document.getElementById('contacto').scrollIntoView({behavior:'smooth'})">Contactar</button>
+        </div>
+
+        <div class="features">
+          <div class="feature">
+            <strong>+3,000 canales</strong>
+            <div style="color:var(--muted);font-size:13px">Deportes, entretenimiento y más</div>
+          </div>
+          <div class="feature">
+            <strong>Soporte 24/7</strong>
+            <div style="color:var(--muted);font-size:13px">Instalación y asistencia</div>
+          </div>
+          <div class="feature">
+            <strong>Alta resolución</strong>
+            <div style="color:var(--muted);font-size:13px">HD y 4K según paquete</div>
+          </div>
+        </div>
+
+      </div>
+
+      <aside class="card">
+        <h3>Reseña rápida</h3>
+        <p style="color:var(--muted)">Prueba gratuita de 24 horas disponible. Añadimos guías para conectar en Smart TV, Fire TV, Android y iOS.</p>
+        <ul style="color:var(--muted);padding-left:18px;margin:8px 0">
+          <li>Instalación fácil</li>
+          <li>Pagos seguros</li>
+          <li>Cambio de paquete inmediato</li>
+        </ul>
+      </aside>
+    </section>
+
+    <section id="paquetes">
+      <h2 style="margin-top:42px">Paquetes y precios</h2>
+      <div style="color:var(--muted);margin-top:6px">Precios de ejemplo. Sustituye por tu lista real.</div>
+      <div class="pricing">
+        <div class="price">
+          <h3>Básico</h3>
+          <div class="amount">CLP $5.000 / mes</div>
+          <div style="color:var(--muted);margin-top:8px">Acceso a 500 canales en HD</div>
+          <button class="btn" style="margin-top:12px" onclick="openPaymentModal('Básico',5000)">Comprar</button>
+        </div>
+        <div class="price">
+          <h3>Estándar</h3>
+          <div class="amount">CLP $10.000 / mes</div>
+          <div style="color:var(--muted);margin-top:8px">+1000 canales, VOD limitado</div>
+          <button class="btn" style="margin-top:12px" onclick="openPaymentModal('Estándar',10000)">Comprar</button>
+        </div>
+        <div class="price">
+          <h3>Premium</h3>
+          <div class="amount">CLP $20.000 / mes</div>
+          <div style="color:var(--muted);margin-top:8px">Todos los canales, VOD y 4K</div>
+          <button class="btn" style="margin-top:12px" onclick="openPaymentModal('Premium',20000)">Comprar</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="contacto" style="margin-top:28px">
+      <h2>Contacto y compra</h2>
+      <div style="display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start;margin-top:12px">
+        <div>
+          <p style="color:var(--muted)">Rellena el formulario para que te contactemos o recibir instrucciones de pago. Los métodos de pago se gestionan manualmente en este ejemplo.</p>
+          <form id="contactForm" onsubmit="handleSubmit(event)">
+            <input type="text" id="name" placeholder="Nombre" required />
+            <input type="email" id="email" placeholder="Correo electrónico" required />
+            <select id="package">
+              <option value="Básico">Básico — CLP $5.000</option>
+              <option value="Estándar">Estándar — CLP $10.000</option>
+              <option value="Premium">Premium — CLP $20.000</option>
+            </select>
+            <textarea id="msg" placeholder="Mensaje (opcional)" rows="4"></textarea>
+            <button class="btn" type="submit">Enviar solicitud</button>
+            <div id="formResult" style="margin-top:8px;color:var(--muted)"></div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>Pago (simulado)</h3>
+          <p style="color:var(--muted)">Este es un simulador de pago. Al confirmar se generará un comprobante ficticio.</p>
+          <button class="btn" onclick="openPaymentModal(document.getElementById('package').value, getSelectedPackageAmount())">Ir a pago</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Modal de pago simulado -->
+    <div id="paymentModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;padding:20px">
+      <div style="background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));padding:20px;border-radius:12px;max-width:460px;width:100%">
+        <h3 id="pmTitle">Pagar paquete</h3>
+        <form id="paymentForm">
+          <div style="margin-bottom:8px;color:var(--muted)" id="pmAmount">CLP $0</div>
+          <label style="font-size:13px;color:var(--muted)">Método de pago</label>
+          <select id="pmMethod" style="margin-bottom:8px">
+            <option>Tarjeta de crédito</option>
+            <option>Transferencia bancaria</option>
+            <option>Webpay (simulado)</option>
+          </select>
+          <input id="pmName" placeholder="Nombre en la tarjeta / cuenta" required />
+          <input id="pmCard" placeholder="Número (solo ejemplo)" style="margin-top:8px" />
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input id="pmExp" placeholder="MM/AA" />
+            <input id="pmCvc" placeholder="CVC" />
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn" type="submit">Pagar (simulado)</button>
+            <button type="button" class="btn secondary" onclick="closePaymentModal()">Cancelar</button>
+          </div>
+          <div id="pmResult" style="margin-top:10px;color:var(--muted)"></div>
+        </form>
+      </div>
+    </div>
+
+    <footer>
+      <div style="margin-top:36px">Aviso legal: Asegúrate de tener los derechos/licencias necesarias para transmitir contenido. Nosotros no verificamos la titularidad en esta plantilla.</div>
+      <div style="margin-top:8px">© <span id="year"></span> MiIPTV — Todos los derechos reservados</div>
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    function selectPackage(name){
+      document.getElementById('package').value = name;
+      document.getElementById('contacto').scrollIntoView({behavior:'smooth'});
+    }
+
+    function getSelectedPackageAmount(){
+      const v = document.getElementById('package').value;
+      if(v.includes('Básico')) return 5000;
+      if(v.includes('Estándar')) return 10000;
+      if(v.includes('Premium')) return 20000;
+      return 0;
+    }
+
+    function openPaymentModal(pkg, amount){
+      // pkg puede ser nombre o el valor del select
+      const title = typeof pkg === 'string' ? pkg : document.getElementById('package').value;
+      const amt = amount || getSelectedPackageAmount();
+      document.getElementById('paymentModal').style.display = 'flex';
+      document.getElementById('pmTitle').textContent = 'Pagar paquete: ' + title;
+      document.getElementById('pmAmount').textContent = 'CLP $' + amt.toLocaleString('es-CL');
+      document.getElementById('pmResult').textContent = '';
+      document.getElementById('pmName').value = '';
+      document.getElementById('pmCard').value = '';
+      document.getElementById('pmExp').value = '';
+      document.getElementById('pmCvc').value = '';
+      // store selected package in a data attribute
+      document.getElementById('paymentForm').dataset.pkg = title;
+      document.getElementById('paymentForm').dataset.amount = amt;
+    }
+
+    function closePaymentModal(){
+      document.getElementById('paymentModal').style.display = 'none';
+    }
+
+    document.getElementById('paymentForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const result = document.getElementById('pmResult');
+      const form = e.currentTarget;
+      const name = document.getElementById('pmName').value || 'Cliente';
+      const pkg = form.dataset.pkg || document.getElementById('package').value;
+      const amt = parseInt(form.dataset.amount || getSelectedPackageAmount(),10);
+      result.textContent = 'Procesando pago...';
+      setTimeout(()=>{
+        const txn = 'CH-' + Date.now().toString().slice(-8);
+        result.textContent = 'Pago simulado exitoso. Comprobante: ' + txn;
+        // Actualizar formulario de contacto con datos de compra
+        const contactResult = document.getElementById('formResult');
+        if(contactResult) contactResult.textContent = `Compra: ${pkg} — CLP $${amt.toLocaleString('es-CL')} — Comprobante: ${txn}`;
+        console.log('Pago simulado', {pkg, amt, name, txn});
+      }, 1200);
+    });
+
+    function handleSubmit(e){
+      e.preventDefault();
+      const result = document.getElementById('formResult');
+      const data = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        package: document.getElementById('package').value,
+        msg: document.getElementById('msg').value
+      };
+      result.textContent = 'Solicitud enviada (ejemplo). Revisa tu correo para instrucciones.';
+      console.log('Contacto enviado', data);
+    }
+  </script>
+</body>
+</html>
