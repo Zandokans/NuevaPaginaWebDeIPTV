@@ -1,5 +1,53 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import './App.css'
+
+/* ── Admin Password ── */
+const ADMIN_PASSWORD = 'Admin12345'
+
+/* ── Initial Users ── */
+const INITIAL_USERS = [
+  { id: 1, name: 'Carlos Méndez', email: 'carlos@gmail.com', phone: '+56911000001', plan: '2 Dispositivos', active: true, joined: '2025-01-10' },
+  { id: 2, name: 'Ana López', email: 'ana@gmail.com', phone: '+56911000002', plan: '1 Dispositivo', active: true, joined: '2025-02-14' },
+  { id: 3, name: 'Roberto Gómez', email: 'roberto@gmail.com', phone: '+56911000003', plan: '3 Dispositivos', active: false, joined: '2025-03-01' },
+]
+
+/* ── Initial Producers ── */
+const INITIAL_PRODUCERS = [
+  { id: 1, name: 'Juan Revendedor', email: 'juan@streampro.com', phone: '+56911111111', region: 'Santiago', active: true, sales: 142 },
+  { id: 2, name: 'María Distribuidora', email: 'maria@streampro.com', phone: '+56922222222', region: 'Valparaíso', active: true, sales: 89 },
+  { id: 3, name: 'Pedro Agente', email: 'pedro@streampro.com', phone: '+56933333333', region: 'Concepción', active: false, sales: 34 },
+]
+
+/* ── Initial Plans ── */
+const INITIAL_PLANS = [
+  {
+    id: '1-disp', label: '1 Dispositivo', num: '1', color: 'green',
+    rows: [
+      { id: 'r1', periodo: '1 MES', base: 2000 },
+      { id: 'r2', periodo: '3 MESES', base: 6000 },
+      { id: 'r3', periodo: '6 MESES', base: 12000 },
+      { id: 'r4', periodo: '12 MESES', base: 20000 },
+    ],
+  },
+  {
+    id: '2-disp', label: '2 Dispositivos', num: '2', color: 'blue',
+    rows: [
+      { id: 'r1', periodo: '1 MES', base: 3000 },
+      { id: 'r2', periodo: '3 MESES', base: 7000 },
+      { id: 'r3', periodo: '6 MESES', base: 16000 },
+      { id: 'r4', periodo: '12 MESES', base: 25000 },
+    ],
+  },
+  {
+    id: '3-disp', label: '3 Dispositivos', num: '3', color: 'purple',
+    rows: [
+      { id: 'r1', periodo: '1 MES', base: 4000 },
+      { id: 'r2', periodo: '3 MESES', base: 10000 },
+      { id: 'r3', periodo: '6 MESES', base: 17000 },
+      { id: 'r4', periodo: '12 MESES', base: 30000 },
+    ],
+  },
+]
 
 /* ── Extra Icons ── */
 const UserIcon = () => (
@@ -43,25 +91,89 @@ const MailInputIcon = () => (
 )
 
 /* ── Auth Modal ── */
-function AuthModal({ onClose }) {
+function AuthModal({ onClose, onOpenAdminPanel, users, setUsers, loggedInUser, setLoggedInUser }) {
   const [tab, setTab] = useState('login')
   const [showPass, setShowPass] = useState(false)
   const [showPass2, setShowPass2] = useState(false)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [loginError, setLoginError] = useState('')
+  const [userInput, setUserInput] = useState('')
+  const [passInput, setPassInput] = useState('')
+
+  // Registro
+  const [regName, setRegName] = useState('')
+  const [regPassword, setRegPassword] = useState('')
+  const [regConfirmPassword, setRegConfirmPassword] = useState('')
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    setLoginError('')
+
+    if (tab === 'register') {
+      if (!regName.trim() || !userInput.trim() || !regPassword.trim()) {
+        setLoginError('fields_required')
+        return
+      }
+      if (regPassword !== regConfirmPassword) {
+        setLoginError('passwords_dont_match')
+        return
+      }
+    }
+
     setLoading(true)
+
     setTimeout(() => {
       setLoading(false)
-      setSuccess(true)
-    }, 1400)
+      if (tab === 'login') {
+        if (userInput === 'Admin12345' && passInput === 'Admin12345') {
+          setIsAdmin(true)
+          setSuccess(true)
+          setLoggedInUser({ name: 'Administrador', email: 'admin@streampro.com', role: 'admin' })
+        } else {
+          const foundUser = users.find(u => u.email.toLowerCase() === userInput.toLowerCase() || u.name.toLowerCase() === userInput.toLowerCase())
+          if (foundUser) {
+            if (!foundUser.active) {
+              setLoginError('inactive')
+            } else {
+              setIsAdmin(false)
+              setSuccess(true)
+              setLoggedInUser(foundUser)
+            }
+          } else {
+            setLoginError('not_found')
+          }
+        }
+      } else {
+        // Registrar usuario
+        const newUser = {
+          id: Date.now(),
+          name: regName.trim(),
+          email: userInput.trim(),
+          phone: '—',
+          plan: '1 Dispositivo',
+          active: true,
+          joined: new Date().toISOString().slice(0, 10)
+        }
+        setUsers(prev => [newUser, ...prev])
+        setIsAdmin(false)
+        setSuccess(true)
+        setLoggedInUser(newUser)
+      }
+    }, 1200)
+  }
+
+  const handleReset = () => {
+    setSuccess(false); setIsAdmin(false)
+    setUserInput(''); setPassInput('')
+    setRegName(''); setRegPassword(''); setRegConfirmPassword('')
+    setLoginError('')
   }
 
   return (
     <div className="auth-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="auth-modal">
+      <div className={`auth-modal ${loggedInUser && loggedInUser.role === 'admin' ? 'auth-modal-admin' : ''}`}>
         {/* Header */}
         <div className="auth-header">
           <div className="auth-logo">
@@ -73,44 +185,188 @@ function AuthModal({ onClose }) {
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="auth-tabs">
-          <button
-            className={`auth-tab ${tab === 'login' ? 'active' : ''}`}
-            onClick={() => { setTab('login'); setSuccess(false) }}
-          >Iniciar sesión</button>
-          <button
-            className={`auth-tab ${tab === 'register' ? 'active' : ''}`}
-            onClick={() => { setTab('register'); setSuccess(false) }}
-          >Crear cuenta</button>
-        </div>
+        {/* Tabs — ocultos cuando hay un usuario logueado */}
+        {!loggedInUser && (
+          <div className="auth-tabs">
+            <button
+              className={`auth-tab ${tab === 'login' ? 'active' : ''}`}
+              onClick={() => { setTab('login'); handleReset() }}
+            >Iniciar sesión</button>
+            <button
+              className={`auth-tab ${tab === 'register' ? 'active' : ''}`}
+              onClick={() => { setTab('register'); handleReset() }}
+            >Crear cuenta</button>
+          </div>
+        )}
 
         {/* Body */}
         <div className="auth-body">
-          {success ? (
-            <div className="auth-success">
-              <div className="auth-success-icon"><CheckIcon /></div>
-              <h3>{tab === 'login' ? '¡Bienvenido de vuelta!' : '¡Cuenta creada!'}</h3>
-              <p>{tab === 'login' ? 'Has iniciado sesión correctamente.' : 'Tu cuenta ha sido creada. Ya puedes disfrutar StreamPro.'}</p>
-              <button className="button primary" style={{ width: '100%', marginTop: '8px' }} onClick={onClose}>Continuar</button>
-            </div>
+          {loggedInUser ? (
+            loggedInUser.role === 'admin' ? (
+              /* ── PERFIL ADMINISTRADOR ── */
+              <div className="admin-profile">
+                {/* Avatar & nombre */}
+                <div className="ap-hero">
+                  <div className="ap-avatar">
+                    <span>A</span>
+                    <span className="ap-badge">🛡️</span>
+                  </div>
+                  <div className="ap-info">
+                    <h3>Administrador</h3>
+                    <span className="ap-role">Super Admin · StreamPro</span>
+                    <span className="ap-user">@Admin1234</span>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="ap-stats">
+                  <div className="ap-stat">
+                    <strong>{users.length}</strong>
+                    <span>Usuarios</span>
+                  </div>
+                  <div className="ap-stat">
+                    <strong>265</strong>
+                    <span>Ventas totales</span>
+                  </div>
+                  <div className="ap-stat">
+                    <strong>99.9%</strong>
+                    <span>Uptime</span>
+                  </div>
+                  <div className="ap-stat">
+                    <strong>24/7</strong>
+                    <span>Activo</span>
+                  </div>
+                </div>
+
+                {/* Info rows */}
+                <div className="ap-details">
+                  <div className="ap-detail-row">
+                    <span className="ap-detail-label">Usuario</span>
+                    <span className="ap-detail-val">Admin1234</span>
+                  </div>
+                  <div className="ap-detail-row">
+                    <span className="ap-detail-label">Rol</span>
+                    <span className="ap-detail-val ap-role-badge">🛡️ Administrador</span>
+                  </div>
+                  <div className="ap-detail-row">
+                    <span className="ap-detail-label">Acceso</span>
+                    <span className="ap-detail-val" style={{ color: '#34d399' }}>✅ Completo</span>
+                  </div>
+                  <div className="ap-detail-row">
+                    <span className="ap-detail-label">Último acceso</span>
+                    <span className="ap-detail-val">Ahora mismo</span>
+                  </div>
+                </div>
+
+                {/* Acciones rápidas */}
+                <div className="ap-actions">
+                  <button
+                    className="button primary ap-action-btn"
+                    onClick={() => { onClose(); onOpenAdminPanel && onOpenAdminPanel() }}
+                  >
+                    🛡️ Abrir Panel Admin
+                  </button>
+                  <button className="button secondary ap-action-btn" onClick={onClose}>
+                    Continuar al sitio
+                  </button>
+                </div>
+
+                <button className="ap-logout" onClick={() => { setLoggedInUser(null); handleReset() }}>
+                  Cerrar sesión
+                </button>
+              </div>
+            ) : (
+              /* ── PERFIL USUARIO NORMAL ── */
+              <div className="admin-profile user-profile">
+                {/* Avatar & nombre */}
+                <div className="ap-hero">
+                  <div className="ap-avatar" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent2))' }}>
+                    <span>{loggedInUser.name.charAt(0).toUpperCase()}</span>
+                    <span className="ap-badge">⚡</span>
+                  </div>
+                  <div className="ap-info">
+                    <h3>{loggedInUser.name}</h3>
+                    <span className="ap-role">Cliente VIP StreamPro</span>
+                    <span className="ap-user">{loggedInUser.email}</span>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="ap-stats">
+                  <div className="ap-stat">
+                    <strong>{loggedInUser.plan}</strong>
+                    <span>Plan Activo</span>
+                  </div>
+                  <div className="ap-stat" style={{ color: '#34d399' }}>
+                    <strong>✔ Activo</strong>
+                    <span>Estado</span>
+                  </div>
+                  <div className="ap-stat">
+                    <strong>1</strong>
+                    <span>Disps. Conectados</span>
+                  </div>
+                </div>
+
+                {/* Info rows */}
+                <div className="ap-details">
+                  <div className="ap-detail-row">
+                    <span className="ap-detail-label">Correo</span>
+                    <span className="ap-detail-val">{loggedInUser.email}</span>
+                  </div>
+                  <div className="ap-detail-row">
+                    <span className="ap-detail-label">Teléfono</span>
+                    <span className="ap-detail-val">{loggedInUser.phone || '—'}</span>
+                  </div>
+                  <div className="ap-detail-row">
+                    <span className="ap-detail-label">Fecha de registro</span>
+                    <span className="ap-detail-val">{loggedInUser.joined}</span>
+                  </div>
+                </div>
+
+                {/* Acciones rápidas */}
+                <div className="ap-actions">
+                  <button className="button primary ap-action-btn" onClick={onClose}>
+                    Comenzar a ver canales
+                  </button>
+                </div>
+
+                <button className="ap-logout" onClick={() => { setLoggedInUser(null); handleReset() }}>
+                  Cerrar sesión
+                </button>
+              </div>
+            )
           ) : (
-            <form className="auth-form" onSubmit={handleSubmit}>
+            /* ── FORMULARIO ── */
+            <form className="auth-form" onSubmit={handleSubmit} noValidate>
               {tab === 'register' && (
                 <div className="auth-field">
                   <label>Nombre completo</label>
                   <div className="auth-input-wrap">
                     <span className="auth-input-icon"><UserIcon /></span>
-                    <input type="text" placeholder="Tu nombre" required autoComplete="name" />
+                    <input
+                      type="text"
+                      placeholder="Tu nombre"
+                      required
+                      autoComplete="name"
+                      value={regName}
+                      onChange={e => setRegName(e.target.value)}
+                    />
                   </div>
                 </div>
               )}
 
               <div className="auth-field">
-                <label>Correo electrónico</label>
+                <label>{tab === 'login' ? 'Usuario o correo' : 'Correo electrónico'}</label>
                 <div className="auth-input-wrap">
                   <span className="auth-input-icon"><MailInputIcon /></span>
-                  <input type="email" placeholder="correo@ejemplo.com" required autoComplete="email" />
+                  <input
+                    type="text"
+                    placeholder={tab === 'login' ? 'correo o usuario' : 'correo@ejemplo.com'}
+                    required
+                    autoComplete="username"
+                    value={userInput}
+                    onChange={e => { setUserInput(e.target.value); setLoginError('') }}
+                  />
                 </div>
               </div>
 
@@ -128,6 +384,12 @@ function AuthModal({ onClose }) {
                     placeholder="••••••••"
                     required
                     autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
+                    value={tab === 'login' ? passInput : regPassword}
+                    onChange={e => {
+                      if (tab === 'login') setPassInput(e.target.value)
+                      else setRegPassword(e.target.value)
+                      setLoginError('')
+                    }}
                   />
                   <button type="button" className="auth-eye" onClick={() => setShowPass(p => !p)}>
                     <EyeIcon off={showPass} />
@@ -145,6 +407,8 @@ function AuthModal({ onClose }) {
                       placeholder="••••••••"
                       required
                       autoComplete="new-password"
+                      value={regConfirmPassword}
+                      onChange={e => { setRegConfirmPassword(e.target.value); setLoginError('') }}
                     />
                     <button type="button" className="auth-eye" onClick={() => setShowPass2(p => !p)}>
                       <EyeIcon off={showPass2} />
@@ -158,6 +422,22 @@ function AuthModal({ onClose }) {
                   <input type="checkbox" required />
                   <span>Acepto los <a href="#">términos de servicio</a> y la <a href="#">política de privacidad</a></span>
                 </label>
+              )}
+
+              {loginError === 'not_found' && (
+                <p className="auth-login-error">❌ Usuario o contraseña incorrectos.</p>
+              )}
+
+              {loginError === 'inactive' && (
+                <p className="auth-login-error">⚠️ Tu cuenta está inactiva. Contacta a soporte para reactivar tu servicio.</p>
+              )}
+
+              {loginError === 'passwords_dont_match' && (
+                <p className="auth-login-error">❌ Las contraseñas no coinciden.</p>
+              )}
+
+              {loginError === 'fields_required' && (
+                <p className="auth-login-error">❌ Por favor completa todos los campos obligatorios.</p>
               )}
 
               <button type="submit" className={`button primary auth-submit ${loading ? 'loading' : ''}`} disabled={loading}>
@@ -273,65 +553,38 @@ const MoonIcon = () => (
   </svg>
 )
 
-/* ── Pricing Data ── */
-const PLANS = [
-  {
-    id: '1-disp',
-    label: '1 Dispositivo',
-    num: '1',
-    color: 'green',
-    icon: '👤',
-    rows: [
-      { periodo: '1 MES', precio: '$2.000' },
-      { periodo: '3 MESES', precio: '$6.000' },
-      { periodo: '6 MESES', precio: '$12.000' },
-      { periodo: '12 MESES', precio: '$20.000' },
-    ],
-  },
-  {
-    id: '2-disp',
-    label: '2 Dispositivos',
-    num: '2',
-    color: 'blue',
-    icon: '👥',
-    rows: [
-      { periodo: '1 MES', precio: '$3.000' },
-      { periodo: '3 MESES', precio: '$7.000' },
-      { periodo: '6 MESES', precio: '$16.000' },
-      { periodo: '12 MESES', precio: '$25.000' },
-    ],
-  },
-  {
-    id: '3-disp',
-    label: '3 Dispositivos',
-    num: '3',
-    color: 'purple',
-    icon: '👨‍👩‍👧',
-    rows: [
-      { periodo: '1 MES', precio: '$4.000' },
-      { periodo: '3 MESES', precio: '$10.000' },
-      { periodo: '6 MESES', precio: '$17.000' },
-      { periodo: '12 MESES', precio: '$30.000' },
-    ],
-  },
-]
+/* ── Pricing Data fallback (used by PricingTable when no prop) ── */
+const BASE_PLANS = INITIAL_PLANS
 
-function PricingTable() {
+function formatCLP(num) {
+  return '$' + num.toLocaleString('es-CL')
+}
+
+function applyDiscount(base, pct) {
+  if (!pct || pct <= 0) return { precio: formatCLP(base), discounted: false }
+  const discounted = Math.round(base * (1 - pct / 100))
+  return { precio: formatCLP(discounted), original: formatCLP(base), discounted: true }
+}
+
+function PricingTable({ discount = 0, plans }) {
+  const activePlans = plans || BASE_PLANS
   return (
     <div className="pricing-table-wrap">
-      {/* tagline */}
       <div className="pricing-tagline">
         <span>TV EN VIVO</span><span className="pt-dot">·</span>
         <span>SERIES</span><span className="pt-dot">·</span>
         <span>PELÍCULAS</span><span className="pt-dot">·</span>
         <span>DEPORTES</span>
       </div>
-
-      {/* Plan cards */}
+      {discount > 0 && (
+        <div className="discount-banner">
+          <span className="discount-fire">🔥</span>
+          <span>¡Descuento especial activo! <strong>{discount}% OFF</strong> en todos los planes</span>
+        </div>
+      )}
       <div className="pricing-cards">
-        {PLANS.map(plan => (
+        {activePlans.map(plan => (
           <article key={plan.id} className={`pricing-card pc-${plan.color}`}>
-            {/* Card header */}
             <div className={`pc-header pc-header-${plan.color}`}>
               <div className={`pc-icon-wrap pc-icon-${plan.color}`}>
                 <UserGroupIcon n={plan.num} />
@@ -341,35 +594,28 @@ function PricingTable() {
                 <div className="pc-label">DISPOSITIVO{plan.num !== '1' ? 'S' : ''}</div>
               </div>
             </div>
-
-            {/* Price table */}
             <div className="pc-table">
-              <div className="pc-table-head">
-                <span>PERIODO</span>
-                <span>PRECIO</span>
-              </div>
-              {plan.rows.map((r, i) => (
-                <div
-                  key={i}
-                  className={`pc-table-row ${i === plan.rows.length - 1 ? `pc-row-last pc-row-last-${plan.color}` : ''}`}
-                >
-                  <span className="pc-period">{r.periodo}</span>
-                  <span className="pc-price">{r.precio}</span>
-                </div>
-              ))}
+              <div className="pc-table-head"><span>PERIODO</span><span>PRECIO</span></div>
+              {plan.rows.map((r, i) => {
+                const priceInfo = applyDiscount(r.base, discount)
+                return (
+                  <div key={r.id || i} className={`pc-table-row ${i === plan.rows.length - 1 ? `pc-row-last pc-row-last-${plan.color}` : ''}`}>
+                    <span className="pc-period">{r.periodo}</span>
+                    <span className="pc-price">
+                      {priceInfo.discounted && <span className="pc-price-original">{priceInfo.original}</span>}
+                      <span className={priceInfo.discounted ? 'pc-price-deal' : ''}>{priceInfo.precio}</span>
+                    </span>
+                  </div>
+                )
+              })}
             </div>
-
-            <a href="https://wa.me/56928422082" target="_blank" rel="noreferrer"
-              className={`button pc-btn pc-btn-${plan.color}`}>
+            <a href="https://wa.me/56928422082" target="_blank" rel="noreferrer" className={`button pc-btn pc-btn-${plan.color}`}>
               Contratar <ArrowIcon />
             </a>
           </article>
         ))}
       </div>
-
-      <p className="pricing-note">
-        Precios en pesos chilenos (CLP) · Activación rápida · Soporte técnico incluido
-      </p>
+      <p className="pricing-note">Precios en pesos chilenos (CLP) · Activación rápida · Soporte técnico incluido</p>
     </div>
   )
 }
@@ -826,8 +1072,451 @@ function SalesNotifications() {
   )
 }
 
+/* ── Admin Panel Component ── */
+const PLAN_COLORS = ['green', 'blue', 'purple', 'cyan', 'orange', 'red']
+
+function AdminPanel({ onClose, discount, setDiscount, producers, setProducers, users, setUsers, plans, setPlans }) {
+  const [tab, setTab] = useState('usuarios')
+
+  /* ── USUARIOS ── */
+  const [uName, setUName] = useState('')
+  const [uEmail, setUEmail] = useState('')
+  const [uPhone, setUPhone] = useState('')
+  const [uPlan, setUPlan] = useState('')
+  const [uError, setUError] = useState('')
+
+  const handleAddUser = (e) => {
+    e.preventDefault(); setUError('')
+    if (!uName.trim() || !uEmail.trim()) { setUError('Nombre y correo son obligatorios.'); return }
+    setUsers(prev => [{ id: Date.now(), name: uName.trim(), email: uEmail.trim(), phone: uPhone.trim() || '—', plan: uPlan || plans[0]?.label || '1 Dispositivo', active: true, joined: new Date().toISOString().slice(0,10) }, ...prev])
+    setUName(''); setUEmail(''); setUPhone(''); setUPlan('')
+  }
+
+  /* ── PRODUCTORES ── */
+  const [newName, setNewName] = useState('')
+  const [newEmail, setNewEmail] = useState('')
+  const [newPhone, setNewPhone] = useState('')
+  const [newRegion, setNewRegion] = useState('')
+  const [formError, setFormError] = useState('')
+
+  const handleAddProducer = (e) => {
+    e.preventDefault(); setFormError('')
+    if (!newName.trim() || !newEmail.trim()) { setFormError('Nombre y correo son obligatorios.'); return }
+    setProducers(prev => [{ id: Date.now(), name: newName.trim(), email: newEmail.trim(), phone: newPhone.trim() || '—', region: newRegion.trim() || '—', active: true, sales: 0 }, ...prev])
+    setNewName(''); setNewEmail(''); setNewPhone(''); setNewRegion('')
+  }
+
+  /* ── PLANES ── */
+  const [editingPlanId, setEditingPlanId] = useState(null)
+  // new plan form
+  const [npLabel, setNpLabel] = useState('')
+  const [npNum, setNpNum] = useState('')
+  const [npColor, setNpColor] = useState('green')
+  const [npError, setNpError] = useState('')
+
+  const handleAddPlan = (e) => {
+    e.preventDefault(); setNpError('')
+    if (!npLabel.trim() || !npNum.trim()) { setNpError('Nombre y número de dispositivos son obligatorios.'); return }
+    const newPlan = {
+      id: 'plan-' + Date.now(),
+      label: npLabel.trim(),
+      num: npNum.trim(),
+      color: npColor,
+      rows: [{ id: 'r-' + Date.now(), periodo: '1 MES', base: 2000 }],
+    }
+    setPlans(prev => [...prev, newPlan])
+    setNpLabel(''); setNpNum(''); setNpColor('green')
+  }
+
+  const handleDeletePlan = (planId) => setPlans(prev => prev.filter(p => p.id !== planId))
+
+  const handleUpdatePlanField = (planId, field, value) =>
+    setPlans(prev => prev.map(p => p.id === planId ? { ...p, [field]: value } : p))
+
+  const handleUpdateRow = (planId, rowId, field, value) =>
+    setPlans(prev => prev.map(p => p.id === planId
+      ? { ...p, rows: p.rows.map(r => r.id === rowId ? { ...r, [field]: field === 'base' ? (parseInt(value) || 0) : value } : r) }
+      : p
+    ))
+
+  const handleAddRow = (planId) =>
+    setPlans(prev => prev.map(p => p.id === planId
+      ? { ...p, rows: [...p.rows, { id: 'r-' + Date.now(), periodo: 'NUEVO PERIODO', base: 1000 }] }
+      : p
+    ))
+
+  const handleDeleteRow = (planId, rowId) =>
+    setPlans(prev => prev.map(p => p.id === planId
+      ? { ...p, rows: p.rows.filter(r => r.id !== rowId) }
+      : p
+    ))
+
+  /* ── DESCUENTO ── */
+  const [discountInput, setDiscountInput] = useState(String(discount))
+  const [discountApplied, setDiscountApplied] = useState(false)
+
+  const handleApplyDiscount = () => {
+    const val = parseFloat(discountInput)
+    if (isNaN(val) || val < 0 || val > 100) return
+    setDiscount(val); setDiscountApplied(true)
+    setTimeout(() => setDiscountApplied(false), 2000)
+  }
+  const handleRemoveDiscount = () => { setDiscount(0); setDiscountInput('0') }
+
+  return (
+    <div className="admin-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="admin-modal admin-modal-wide">
+        {/* Header */}
+        <div className="admin-header">
+          <div className="admin-title">
+            <span className="admin-shield">🛡️</span>
+            <div>
+              <h2>Panel de Administrador</h2>
+              <span>StreamPro Control Center</span>
+            </div>
+          </div>
+          <button className="auth-close" onClick={onClose}><CloseIcon /></button>
+        </div>
+
+        {/* Tabs */}
+        <div className="admin-tabs">
+          <button className={`admin-tab ${tab === 'usuarios' ? 'active' : ''}`} onClick={() => setTab('usuarios')}>👤 Usuarios ({users.length})</button>
+          <button className={`admin-tab ${tab === 'productores' ? 'active' : ''}`} onClick={() => setTab('productores')}>👥 Productores ({producers.length})</button>
+          <button className={`admin-tab ${tab === 'planes' ? 'active' : ''}`} onClick={() => setTab('planes')}>💲 Planes & Precios ({plans.length})</button>
+          <button className={`admin-tab ${tab === 'descuento' ? 'active' : ''}`} onClick={() => setTab('descuento')}>🏷️ Descuentos</button>
+        </div>
+
+        <div className="admin-body">
+
+          {/* ── USUARIOS TAB ── */}
+          {tab === 'usuarios' && (
+            <div className="admin-producers">
+              <div className="admin-add-form">
+                <h3 className="admin-section-title">➕ Agregar Usuario</h3>
+                <form onSubmit={handleAddUser} className="admin-form-grid" noValidate>
+                  <div className="admin-field"><label>Nombre *</label><input type="text" placeholder="Carlos Méndez" value={uName} onChange={e => setUName(e.target.value)} /></div>
+                  <div className="admin-field"><label>Correo *</label><input type="text" placeholder="carlos@gmail.com" value={uEmail} onChange={e => setUEmail(e.target.value)} /></div>
+                  <div className="admin-field"><label>Teléfono</label><input type="tel" placeholder="+56 9 0000 0000" value={uPhone} onChange={e => setUPhone(e.target.value)} /></div>
+                  <div className="admin-field">
+                    <label>Plan asignado</label>
+                    <select value={uPlan} onChange={e => setUPlan(e.target.value)} className="admin-select">
+                      {plans.map(p => <option key={p.id} value={p.label}>{p.label}</option>)}
+                    </select>
+                  </div>
+                  {uError && <p className="admin-form-error">{uError}</p>}
+                  <button type="submit" className="button primary admin-add-btn">Agregar Usuario</button>
+                </form>
+              </div>
+              <div className="admin-list">
+                <h3 className="admin-section-title">📌 Lista de Usuarios ({users.length})</h3>
+                {users.length === 0 ? <p className="admin-empty">No hay usuarios registrados.</p> : (
+                  <div className="admin-producer-list">
+                    {users.map(u => (
+                      <div key={u.id} className={`admin-producer-card ${!u.active ? 'inactive' : ''}`}>
+                        <div className="apc-avatar" style={{ background: 'linear-gradient(135deg,#8b5cf6,#a78bfa)' }}>{u.name.charAt(0).toUpperCase()}</div>
+                        <div className="apc-info">
+                          <strong>{u.name}</strong>
+                          <span>{u.email}</span>
+                          <div className="apc-meta">
+                            <span>📞 {u.phone}</span>
+                            <span>📦 {u.plan}</span>
+                            <span>📅 {u.joined}</span>
+                          </div>
+                        </div>
+                        <div className="apc-actions">
+                          <button className={`apc-toggle ${u.active ? 'active' : ''}`} onClick={() => setUsers(prev => prev.map(x => x.id === u.id ? { ...x, active: !x.active } : x))}>
+                            {u.active ? '✅ Activo' : '⏸️ Inactivo'}
+                          </button>
+                          <button className="apc-remove" onClick={() => setUsers(prev => prev.filter(x => x.id !== u.id))}>🗑️</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── PRODUCTORES TAB ── */}
+          {tab === 'productores' && (
+            <div className="admin-producers">
+              <div className="admin-add-form">
+                <h3 className="admin-section-title">➕ Agregar Productor</h3>
+                <form onSubmit={handleAddProducer} className="admin-form-grid">
+                  <div className="admin-field"><label>Nombre completo *</label><input type="text" placeholder="Juan Pérez" value={newName} onChange={e => setNewName(e.target.value)} /></div>
+                  <div className="admin-field"><label>Correo *</label><input type="email" placeholder="juan@ejemplo.com" value={newEmail} onChange={e => setNewEmail(e.target.value)} /></div>
+                  <div className="admin-field"><label>Teléfono</label><input type="tel" placeholder="+56 9 1234 5678" value={newPhone} onChange={e => setNewPhone(e.target.value)} /></div>
+                  <div className="admin-field"><label>Región</label><input type="text" placeholder="Santiago" value={newRegion} onChange={e => setNewRegion(e.target.value)} /></div>
+                  {formError && <p className="admin-form-error">{formError}</p>}
+                  <button type="submit" className="button primary admin-add-btn">Agregar Productor</button>
+                </form>
+              </div>
+              <div className="admin-list">
+                <h3 className="admin-section-title">📋 Productores ({producers.length})</h3>
+                {producers.length === 0 ? <p className="admin-empty">No hay productores.</p> : (
+                  <div className="admin-producer-list">
+                    {producers.map(p => (
+                      <div key={p.id} className={`admin-producer-card ${!p.active ? 'inactive' : ''}`}>
+                        <div className="apc-avatar">{p.name.charAt(0).toUpperCase()}</div>
+                        <div className="apc-info">
+                          <strong>{p.name}</strong><span>{p.email}</span>
+                          <div className="apc-meta"><span>📍 {p.region}</span><span>📞 {p.phone}</span><span>🛒 {p.sales} ventas</span></div>
+                        </div>
+                        <div className="apc-actions">
+                          <button className={`apc-toggle ${p.active ? 'active' : ''}`} onClick={() => setProducers(prev => prev.map(x => x.id === p.id ? { ...x, active: !x.active } : x))}>{p.active ? '✅ Activo' : '⏸️ Inactivo'}</button>
+                          <button className="apc-remove" onClick={() => setProducers(prev => prev.filter(x => x.id !== p.id))}>🗑️</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── PLANES & PRECIOS TAB ── */}
+          {tab === 'planes' && (
+            <div className="admin-planes">
+              {/* Add new plan */}
+              <div className="admin-add-form">
+                <h3 className="admin-section-title">➕ Agregar Nuevo Plan de Dispositivos</h3>
+                <form onSubmit={handleAddPlan} className="admin-form-grid" noValidate>
+                  <div className="admin-field"><label>Nombre del plan *</label><input type="text" placeholder="4 Dispositivos" value={npLabel} onChange={e => setNpLabel(e.target.value)} /></div>
+                  <div className="admin-field"><label>Número de dispositivos *</label><input type="text" placeholder="4" value={npNum} onChange={e => setNpNum(e.target.value)} /></div>
+                  <div className="admin-field">
+                    <label>Color</label>
+                    <div className="apl-color-row">
+                      {PLAN_COLORS.map(c => (
+                        <button key={c} type="button" className={`apl-color-dot apl-dot-${c} ${npColor === c ? 'selected' : ''}`} onClick={() => setNpColor(c)} title={c} />
+                      ))}
+                    </div>
+                  </div>
+                  {npError && <p className="admin-form-error">{npError}</p>}
+                  <button type="submit" className="button primary admin-add-btn">➕ Crear Plan</button>
+                </form>
+              </div>
+
+              {/* Plans editor */}
+              <div className="admin-list">
+                <h3 className="admin-section-title">✏️ Editar Planes ({plans.length})</h3>
+                <div className="apl-list">
+                  {plans.map(plan => (
+                    <div key={plan.id} className={`apl-card apl-card-${plan.color}`}>
+                      {/* Plan header */}
+                      <div className="apl-card-header">
+                        <div className="apl-card-title">
+                          <div className={`apl-color-badge apl-dot-${plan.color}`} />
+                          <div>
+                            <input
+                              className="apl-name-input"
+                              value={plan.label}
+                              onChange={e => handleUpdatePlanField(plan.id, 'label', e.target.value)}
+                              placeholder="Nombre del plan"
+                            />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                              <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>Dispositivos:</span>
+                              <input
+                                className="apl-num-input"
+                                value={plan.num}
+                                onChange={e => handleUpdatePlanField(plan.id, 'num', e.target.value)}
+                                placeholder="Nº"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                          <button
+                            className="apl-toggle-edit"
+                            onClick={() => setEditingPlanId(editingPlanId === plan.id ? null : plan.id)}
+                          >
+                            {editingPlanId === plan.id ? '✅ Listo' : '✏️ Editar'}
+                          </button>
+                          <button className="apc-remove" onClick={() => handleDeletePlan(plan.id)} title="Eliminar plan">🗑️</button>
+                        </div>
+                      </div>
+
+                      {/* Rows editor */}
+                      <div className="apl-rows">
+                        <div className="apl-rows-head">
+                          <span>Periodo</span>
+                          <span>Precio (CLP)</span>
+                          {editingPlanId === plan.id && <span></span>}
+                        </div>
+                        {plan.rows.map(r => (
+                          <div key={r.id} className="apl-row">
+                            {editingPlanId === plan.id ? (
+                              <>
+                                <input
+                                  className="apl-row-input"
+                                  value={r.periodo}
+                                  onChange={e => handleUpdateRow(plan.id, r.id, 'periodo', e.target.value)}
+                                />
+                                <input
+                                  className="apl-row-input apl-price-input"
+                                  type="number"
+                                  value={r.base}
+                                  min="0"
+                                  onChange={e => handleUpdateRow(plan.id, r.id, 'base', e.target.value)}
+                                />
+                                <button className="apl-del-row" onClick={() => handleDeleteRow(plan.id, r.id)} title="Eliminar fila">✕</button>
+                              </>
+                            ) : (
+                              <>
+                                <span className="apl-row-label">{r.periodo}</span>
+                                <span className="apl-row-price">{formatCLP(r.base)}</span>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                        {editingPlanId === plan.id && (
+                          <button className="apl-add-row" onClick={() => handleAddRow(plan.id)}>➕ Agregar periodo</button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── DESCUENTO TAB ── */}
+          {tab === 'descuento' && (
+            <div className="admin-discount">
+              <div className="admin-discount-hero">
+                <div className="adh-icon">🏷️</div>
+                <h3>Configurar Descuento Global</h3>
+                <p>El descuento se aplica en tiempo real a todos los planes visibles en la página.</p>
+              </div>
+              <div className="admin-discount-current">
+                <span>Descuento actual:</span>
+                {discount > 0 ? <strong className="adc-active">{discount}% OFF activo 🔥</strong> : <strong className="adc-none">Sin descuento</strong>}
+              </div>
+              <div className="admin-discount-control">
+                <label>Porcentaje de descuento</label>
+                <div className="admin-discount-input-row">
+                  <input type="number" min="0" max="100" step="1" value={discountInput} onChange={e => setDiscountInput(e.target.value)} placeholder="0" />
+                  <span className="adc-pct">%</span>
+                </div>
+                <div className="admin-discount-presets">
+                  {[5, 10, 15, 20, 25, 30].map(v => (
+                    <button key={v} className={`adc-preset ${Number(discountInput) === v ? 'active' : ''}`} onClick={() => setDiscountInput(String(v))}>{v}%</button>
+                  ))}
+                </div>
+                <div className="admin-discount-btns">
+                  <button className={`button primary ${discountApplied ? 'applied' : ''}`} onClick={handleApplyDiscount}>
+                    {discountApplied ? '✅ ¡Aplicado!' : '🚀 Aplicar Descuento'}
+                  </button>
+                  {discount > 0 && <button className="button secondary" onClick={handleRemoveDiscount}>✕ Quitar Descuento</button>}
+                </div>
+              </div>
+              {discount > 0 && (
+                <div className="admin-discount-preview">
+                  <h4>Vista previa con {discount}% de descuento</h4>
+                  <div className="adp-grid">
+                    {plans.map(plan => (
+                      <div key={plan.id} className="adp-card">
+                        <div className="adp-plan-name">{plan.label}</div>
+                        {plan.rows.map((r, i) => {
+                          const info = applyDiscount(r.base, discount)
+                          return (
+                            <div key={r.id || i} className="adp-row">
+                              <span>{r.periodo}</span>
+                              <div><span className="adp-original">{formatCLP(r.base)}</span><span className="adp-new">{info.precio}</span></div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function App() {
   const [authOpen, setAuthOpen] = useState(false)
+  const [adminOpen, setAdminOpen] = useState(false)
+  const [adminAuthed, setAdminAuthed] = useState(false)
+  const [adminUserInput, setAdminUserInput] = useState('')
+  const [adminPassInput, setAdminPassInput] = useState('')
+  const [adminPassError, setAdminPassError] = useState(false)
+  const [adminShowPass, setAdminShowPass] = useState(false)
+
+  const [discount, setDiscount] = useState(() => {
+    const saved = localStorage.getItem('admin_discount')
+    return saved !== null ? parseFloat(saved) : 0
+  })
+  const [producers, setProducers] = useState(() => {
+    const saved = localStorage.getItem('admin_producers')
+    return saved !== null ? JSON.parse(saved) : INITIAL_PRODUCERS
+  })
+  const [users, setUsers] = useState(() => {
+    const saved = localStorage.getItem('admin_users')
+    return saved !== null ? JSON.parse(saved) : INITIAL_USERS
+  })
+  const [plans, setPlans] = useState(() => {
+    const saved = localStorage.getItem('admin_plans')
+    return saved !== null ? JSON.parse(saved) : INITIAL_PLANS
+  })
+  const [loggedInUser, setLoggedInUser] = useState(() => {
+    const saved = localStorage.getItem('logged_in_user')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (parsed.role === 'admin') return parsed
+        const allUsers = localStorage.getItem('admin_users')
+        const usersList = allUsers ? JSON.parse(allUsers) : INITIAL_USERS
+        const found = usersList.find(u => u.id === parsed.id || u.email.toLowerCase() === parsed.email.toLowerCase())
+        if (found && found.active) return found
+      } catch (e) {
+        return null
+      }
+    }
+    return null
+  })
+
+  useEffect(() => {
+    localStorage.setItem('admin_discount', discount)
+  }, [discount])
+
+  useEffect(() => {
+    localStorage.setItem('admin_producers', JSON.stringify(producers))
+  }, [producers])
+
+  useEffect(() => {
+    localStorage.setItem('admin_users', JSON.stringify(users))
+  }, [users])
+
+  useEffect(() => {
+    localStorage.setItem('admin_plans', JSON.stringify(plans))
+  }, [plans])
+
+  useEffect(() => {
+    if (loggedInUser) {
+      localStorage.setItem('logged_in_user', JSON.stringify(loggedInUser))
+    } else {
+      localStorage.removeItem('logged_in_user')
+    }
+  }, [loggedInUser])
+
+  useEffect(() => {
+    if (loggedInUser && loggedInUser.role !== 'admin') {
+      const found = users.find(u => u.id === loggedInUser.id)
+      if (!found || !found.active) {
+        setLoggedInUser(null)
+      } else if (JSON.stringify(found) !== JSON.stringify(loggedInUser)) {
+        setLoggedInUser(found)
+      }
+    }
+  }, [users, loggedInUser])
+  const logoClickCount = useRef(0)
+  const logoClickTimer = useRef(null)
+
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'dark'
   })
@@ -839,6 +1528,32 @@ function App() {
 
   const toggleTheme = () => {
     setTheme(t => t === 'dark' ? 'light' : 'dark')
+  }
+
+  /* Triple-click on logo opens admin login */
+  const handleLogoClick = useCallback(() => {
+    logoClickCount.current += 1
+    clearTimeout(logoClickTimer.current)
+    logoClickTimer.current = setTimeout(() => {
+      logoClickCount.current = 0
+    }, 600)
+    if (logoClickCount.current >= 3) {
+      logoClickCount.current = 0
+      setAdminPassInput('')
+      setAdminPassError(false)
+      setAdminOpen(true)
+    }
+  }, [])
+
+  const handleAdminLogin = (e) => {
+    e.preventDefault()
+    if (adminUserInput === 'Admin12345' && adminPassInput === ADMIN_PASSWORD) {
+      setAdminAuthed(true)
+      setAdminPassError(false)
+      setLoggedInUser({ name: 'Administrador', email: 'admin@streampro.com', role: 'admin' })
+    } else {
+      setAdminPassError(true)
+    }
   }
 
   const channels = [
@@ -853,7 +1568,7 @@ function App() {
 
       {/* ── Navbar ── */}
       <nav className="navbar">
-        <a href="#" className="nav-logo">
+        <a href="#" className="nav-logo" onClick={handleLogoClick}>
           <div className="nav-logo-icon"><TvIcon /></div>
           <span className="nav-logo-text">StreamPro</span>
         </a>
@@ -867,7 +1582,7 @@ function App() {
           <li><a href="#faq">FAQ</a></li>
           <li>
             <button className="nav-account-btn" onClick={() => setAuthOpen(true)}>
-              <UserIcon /> Mi cuenta
+              <UserIcon /> {loggedInUser ? loggedInUser.name : 'Mi cuenta'}
             </button>
           </li>
           <li>
@@ -876,10 +1591,91 @@ function App() {
             </button>
           </li>
           <li><a href="#contacto" className="nav-cta">Empezar ahora</a></li>
+          <li>
+            <button className="nav-admin-btn" onClick={() => setAdminOpen(true)} title="Acceso administrador">
+              🛡️ Admin
+            </button>
+          </li>
         </ul>
       </nav>
 
-      {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
+      {authOpen && (
+        <AuthModal
+          onClose={() => setAuthOpen(false)}
+          onOpenAdminPanel={() => {
+            setAdminUserInput('')
+            setAdminPassInput('')
+            setAdminPassError(false)
+            setAdminAuthed(true)
+            setAdminOpen(true)
+          }}
+          users={users}
+          setUsers={setUsers}
+          loggedInUser={loggedInUser}
+          setLoggedInUser={setLoggedInUser}
+        />
+      )}
+
+      {/* ── Admin Login Modal ── */}
+      {adminOpen && !adminAuthed && (
+        <div className="admin-overlay" onClick={e => e.target === e.currentTarget && setAdminOpen(false)}>
+          <div className="admin-login-modal">
+            <div className="admin-login-icon">🛡️</div>
+            <h3>Panel de Administrador</h3>
+            <p>Ingresa tus credenciales de acceso</p>
+            <form onSubmit={handleAdminLogin} noValidate style={{ marginTop: '8px' }}>
+              {/* Usuario */}
+              <div className="auth-field" style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px', display: 'block' }}>Usuario</label>
+                <div className="auth-input-wrap">
+                  <span className="auth-input-icon"><UserIcon /></span>
+                  <input
+                    type="text"
+                    placeholder="Admin12345"
+                    value={adminUserInput}
+                    onChange={e => { setAdminUserInput(e.target.value); setAdminPassError(false) }}
+                    autoFocus
+                  />
+                </div>
+              </div>
+              {/* Contraseña */}
+              <div className="auth-field" style={{ marginBottom: '16px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px', display: 'block' }}>Contraseña</label>
+                <div className="auth-input-wrap">
+                  <span className="auth-input-icon"><LockIcon /></span>
+                  <input
+                    type={adminShowPass ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={adminPassInput}
+                    onChange={e => { setAdminPassInput(e.target.value); setAdminPassError(false) }}
+                  />
+                  <button type="button" className="auth-eye" onClick={() => setAdminShowPass(p => !p)}>
+                    <EyeIcon off={adminShowPass} />
+                  </button>
+                </div>
+              </div>
+              {adminPassError && <p className="admin-form-error" style={{ marginBottom: '12px' }}>❌ Usuario o contraseña incorrectos.</p>}
+              <button type="submit" className="button primary" style={{ width: '100%', borderRadius: '12px' }}>Acceder al Panel</button>
+            </form>
+            <button className="admin-login-cancel" onClick={() => setAdminOpen(false)}>Cancelar</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Admin Panel ── */}
+      {adminOpen && adminAuthed && (
+        <AdminPanel
+          onClose={() => { setAdminOpen(false); setAdminAuthed(false) }}
+          discount={discount}
+          setDiscount={setDiscount}
+          producers={producers}
+          setProducers={setProducers}
+          users={users}
+          setUsers={setUsers}
+          plans={plans}
+          setPlans={setPlans}
+        />
+      )}
 
       {/* ── Hero ── */}
       <header className="hero-section">
@@ -1018,7 +1814,7 @@ function App() {
           </a>
         </div>
 
-        <PricingTable />
+        <PricingTable discount={discount} plans={plans} />
 
         {/* ── Speed Test Widget ── */}
         <SpeedTest />
